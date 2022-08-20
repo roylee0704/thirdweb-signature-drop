@@ -12,7 +12,7 @@ export default async function generateMintSignature(
   );
 
   const signatureDrop = goerliSDK.getSignatureDrop(
-    process.env.SIGNATURE_DROP_CONTRACT_ADDRESS as string
+    process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS as string
   );
 
   const mintSignature = await signatureDrop.signature.generate({

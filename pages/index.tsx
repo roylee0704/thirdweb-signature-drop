@@ -21,7 +21,12 @@ const Home: NextPage = () => {
 
   // Get the NFT Collection we deployed using thirdweb+
   const signatureDrop = useSignatureDrop(
-    process.env.SIGNATURE_DROP_CONTRACT_ADDRESS as string
+    process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS as string
+  );
+
+  console.log(
+    "process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS",
+    process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS
   );
 
   async function claim() {
@@ -37,6 +42,8 @@ const Home: NextPage = () => {
 
     try {
       const tx = await signatureDrop?.claimTo(address, 1);
+
+      console.log(tx, "tx");
 
       alert("Successfully minted NFT!");
     } catch (error: any) {
@@ -74,7 +81,7 @@ const Home: NextPage = () => {
         (await signedPayloadReq.json()) as SignedPayload721WithQuantitySignature;
 
       const nft = await signatureDrop?.signature.mint(signedPayload);
-
+      console.log(nft, "nft?");
       alert("Successfully minted NFT!");
     } catch (error: any) {
       console.log(error?.message);
