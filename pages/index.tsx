@@ -1,14 +1,20 @@
 import {
   ChainId,
+  useActiveClaimCondition,
   useAddress,
+  useClaimNFT,
+  useContract,
   useDisconnect,
   useMetamask,
   useNetwork,
   useNetworkMismatch,
   useNFTCollection,
+  useNFTDrop,
   useSignatureDrop,
 } from "@thirdweb-dev/react";
 import { SignedPayload721WithQuantitySignature } from "@thirdweb-dev/sdk";
+import { utils } from "ethers";
+import moment from "moment";
 import type { NextPage } from "next";
 
 const Home: NextPage = () => {
@@ -23,6 +29,11 @@ const Home: NextPage = () => {
   const signatureDrop = useSignatureDrop(
     process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS as string
   );
+
+  const nftDrop = useNFTDrop("0x36362a6B6f1bd1f3519f4454573f045e56b2Dc92");
+  nftDrop?.interceptor.overrideNextTransaction(() => ({
+    gasLimit: 3000000,
+  }));
 
   console.log(
     "process.env.NEXT_PUBLIC_SIGNATURE_DROP_CONTRACT_ADDRESS",
@@ -88,6 +99,73 @@ const Home: NextPage = () => {
     }
   }
 
+  async function updateNftDropClaimConditions() {
+    if (!address) {
+      connectWithMetamask();
+      return;
+    }
+
+    if (isOnWrongNetwork) {
+      switchNetwork?.(ChainId.Goerli);
+      return;
+    }
+
+    try {
+      const presaleStartTime = moment();
+
+      // const freeMintCondition = {
+      //   startTime: presaleStartTime.toDate(), // start the presale now
+      //   maxQuantity: 1, // limit how many mints for this presale
+      //   price: 0, // presale price
+      //   snapshot: ["0x46c019289556f33c292bCa4c497A13e614ac4868"], // limit minting to only certain addresses
+      // };
+
+      const preSalesClaimCondition = {
+        startTime: presaleStartTime.toDate(), // start the presale now
+        maxQuantity: 2, // limit how many mints for this presale
+        price: 0.001, // presale price
+        snapshot: [], // limit minting to only certain addresses
+      };
+
+      const publicSalesClaimCondition = {
+        startTime: presaleStartTime.add(5, "minutes").toDate(), // start the presale now
+        maxQuantity: 3, // limit how many mints for this presale
+        price: 0.002, // presale price
+        snapshot: [], // limit minting to only certain addresses
+      };
+
+      const data = await nftDrop?.claimConditions.set([
+        //freeMintCondition,
+        preSalesClaimCondition,
+        publicSalesClaimCondition,
+      ]);
+
+      console.log(data, "data?");
+      alert("Successfully udpdated claimConditions!");
+    } catch (error: any) {
+      console.log(error?.message);
+    }
+  }
+  const { mutate: claimANftDrop, isLoading: isClaimingNftDrop } =
+    useClaimNFT(nftDrop);
+
+  const { data, isLoading, error } = useActiveClaimCondition(nftDrop);
+
+  console.log(data?.price.toNumber());
+  async function claimNftDrop() {
+    if (!address) {
+      connectWithMetamask();
+      return;
+    }
+
+    if (isOnWrongNetwork) {
+      switchNetwork?.(ChainId.Goerli);
+      return;
+    }
+
+    claimANftDrop({ to: address, quantity: 1 });
+  }
+
   const connectWithMetamask = useMetamask();
   const disconnectWallet = useDisconnect();
 
@@ -100,6 +178,15 @@ const Home: NextPage = () => {
 
           <button onClick={claim}>Normal Claim</button>
           <button onClick={claimWithSignature}>Signature Claim</button>
+
+          <button onClick={claimNftDrop}>
+            NFT DROP Claim {utils.formatEther(data?.price.toString() ?? 0)}{" "}
+            ethers
+          </button>
+
+          <button onClick={updateNftDropClaimConditions}>
+            Update NFT DROP Claim Conditions
+          </button>
         </>
       ) : (
         <button onClick={connectWithMetamask}>Connect with Metamask</button>
