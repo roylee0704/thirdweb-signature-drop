@@ -1,5 +1,6 @@
 import {
   ChainId,
+  ThirdwebNftMedia,
   useActiveClaimCondition,
   useAddress,
   useClaimNFT,
@@ -10,6 +11,8 @@ import {
   useNetworkMismatch,
   useNFTCollection,
   useNFTDrop,
+  useNFTs,
+  useOwnedNFTs,
   useSignatureDrop,
 } from "@thirdweb-dev/react";
 import { SignedPayload721WithQuantitySignature } from "@thirdweb-dev/sdk";
@@ -150,6 +153,10 @@ const Home: NextPage = () => {
     useClaimNFT(nftDrop);
 
   const { data, isLoading, error } = useActiveClaimCondition(nftDrop);
+  const { data: ownedNFTs, isLoading: isLoadingNfts } = useOwnedNFTs(
+    nftDrop,
+    address
+  );
 
   console.log(data?.price.toNumber());
   async function claimNftDrop() {
@@ -187,6 +194,15 @@ const Home: NextPage = () => {
           <button onClick={updateNftDropClaimConditions}>
             Update NFT DROP Claim Conditions
           </button>
+          <div>
+            {ownedNFTs?.map((nft) => (
+              <div key={nft.metadata.id.toString()}>
+                <ThirdwebNftMedia metadata={nft.metadata}></ThirdwebNftMedia>
+                <h3>{nft.metadata.name}</h3>
+                <p>Owner: {nft.owner.slice(0, 6)}</p>
+              </div>
+            ))}
+          </div>
         </>
       ) : (
         <button onClick={connectWithMetamask}>Connect with Metamask</button>
