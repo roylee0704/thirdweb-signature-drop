@@ -19,6 +19,7 @@ import { SignedPayload721WithQuantitySignature } from "@thirdweb-dev/sdk";
 import { utils } from "ethers";
 import moment from "moment";
 import type { NextPage } from "next";
+import { useEffect } from "react";
 
 const Home: NextPage = () => {
   const address = useAddress();
@@ -116,29 +117,29 @@ const Home: NextPage = () => {
     try {
       const presaleStartTime = moment();
 
-      // const freeMintCondition = {
-      //   startTime: presaleStartTime.toDate(), // start the presale now
-      //   maxQuantity: 1, // limit how many mints for this presale
-      //   price: 0, // presale price
-      //   snapshot: ["0x46c019289556f33c292bCa4c497A13e614ac4868"], // limit minting to only certain addresses
-      // };
+      const freeMintCondition = {
+        startTime: presaleStartTime.toDate(), // start the presale now
+        maxQuantity: 30, // limit how many mints for this presale
+        price: 0, // presale price
+        snapshot: ["0x46c019289556f33c292bCa4c497A13e614ac4868"], // limit minting to only certain addresses
+      };
 
       const preSalesClaimCondition = {
-        startTime: presaleStartTime.toDate(), // start the presale now
-        maxQuantity: 2, // limit how many mints for this presale
+        startTime: presaleStartTime.add(10, "minutes").toDate(), // start the presale now
+        maxQuantity: 50, // limit how many mints for this presale
         price: 0.001, // presale price
         snapshot: [], // limit minting to only certain addresses
       };
 
       const publicSalesClaimCondition = {
-        startTime: presaleStartTime.add(5, "minutes").toDate(), // start the presale now
-        maxQuantity: 3, // limit how many mints for this presale
+        startTime: presaleStartTime.add(20, "minutes").toDate(), // start the presale now
+        maxQuantity: 100, // limit how many mints for this presale
         price: 0.002, // presale price
         snapshot: [], // limit minting to only certain addresses
       };
 
       const data = await nftDrop?.claimConditions.set([
-        //freeMintCondition,
+        freeMintCondition,
         preSalesClaimCondition,
         publicSalesClaimCondition,
       ]);
@@ -149,8 +150,21 @@ const Home: NextPage = () => {
       console.log(error?.message);
     }
   }
-  const { mutate: claimANftDrop, isLoading: isClaimingNftDrop } =
-    useClaimNFT(nftDrop);
+  const {
+    mutate: claimANftDrop,
+    isSuccess,
+    data: tx,
+    isLoading: isClaimingNftDrop,
+  } = useClaimNFT(nftDrop);
+
+  useEffect(() => {
+    if (!isSuccess) {
+      return;
+    }
+
+    alert("minted!");
+    console.log(tx, "transactions!");
+  }, [isSuccess, tx]);
 
   const { data, isLoading, error } = useActiveClaimCondition(nftDrop);
   const { data: ownedNFTs, isLoading: isLoadingNfts } = useOwnedNFTs(
@@ -170,7 +184,7 @@ const Home: NextPage = () => {
       return;
     }
 
-    claimANftDrop({ to: address, quantity: 1 });
+    claimANftDrop({ to: address, quantity: 2 });
   }
 
   const connectWithMetamask = useMetamask();
